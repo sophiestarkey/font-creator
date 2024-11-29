@@ -1,15 +1,31 @@
 let canvas = document.getElementById("viewport") as HTMLCanvasElement;
-let image = document.getElementById("texture_atlas") as HTMLImageElement;
 let ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
-
 ctx.imageSmoothingEnabled = false;
 
-const image_size = new Vector2(image.width, image.height);
-const image_margin = new Vector2(1, 1);
-const char_margin = new Vector2(1, 1);
-const char_size = new Vector2(5, 10);
+let image_file_input = document.getElementById("image_file_input") as HTMLInputElement;
+image_file_input.addEventListener("change", (ev: Event) => {
+	if (!image_file_input.files || !image_file_input.files.length) {
+		return;
+	}
 
-function main(): void {
+	let file = image_file_input.files[0];
+	let reader = new FileReader();
+
+	reader.onload = (ev: ProgressEvent<FileReader>) => {
+		let image = document.createElement("img");
+		image.src = reader.result as string;
+		image.onload = () => main(image);
+	};
+
+	reader.readAsDataURL(file);
+});
+
+function main(image: HTMLImageElement): void {
+	const image_size = new Vector2(image.width, image.height);
+	const image_margin = new Vector2(1, 1);
+	const char_margin = new Vector2(1, 1);
+	const char_size = new Vector2(5, 10);
+
 	// generate glyph data
 	let glyphs = new Array<Glyph>();
 
@@ -60,6 +76,8 @@ function main(): void {
 	}
 
 	// draw glyph information
+	ctx.resetTransform();
+
 	ctx.fillStyle = "black";
 	ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -87,5 +105,3 @@ function main(): void {
 function glyph_to_string(glyph: Glyph): string {
 	return `char id=${glyph.id} x=${glyph.position.x} y=${glyph.position.y} width=${glyph.size.x} height=${glyph.size.y} xoffset=${glyph.offset.x} yoffset=${glyph.offset.y} xadvance=${glyph.x_advance} page=0 chnl=15`;
 }
-
-window.addEventListener("load", main);

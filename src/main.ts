@@ -6,6 +6,9 @@ const char_margin = new Vector2(0, 0);
 const char_size = new Vector2(10, 10);
 const image_size = new Vector2();
 let baseline = 0;
+let character_range_start = 32;
+let character_range_end = 126;
+let file_name = "";
 
 const image = document.createElement("img");
 
@@ -17,6 +20,8 @@ document.body.oninput = (ev) => {
 	char_size.x = (document.getElementById("glyph_size_x") as HTMLInputElement).valueAsNumber;
 	char_size.y = (document.getElementById("glyph_size_y") as HTMLInputElement).valueAsNumber;
 	baseline = (document.getElementById("baseline") as HTMLInputElement).valueAsNumber;
+	character_range_start = (document.getElementById("character_range_start") as HTMLInputElement).valueAsNumber;
+	character_range_end = (document.getElementById("character_range_end") as HTMLInputElement).valueAsNumber;
 
 	main(image);
 };
@@ -28,6 +33,7 @@ image_file_input.onchange = (ev: Event) => {
 	}
 
 	let file = image_file_input.files[0];
+	file_name = file.name;
 	let reader = new FileReader();
 
 	reader.onload = (ev: ProgressEvent<FileReader>) => {
@@ -55,9 +61,8 @@ function main(image: HTMLImageElement): void {
 	for (let i = 0; i < num_cols * num_rows; i++) {
 		let glyph = new Glyph();
 
-		// temporary code to limit glyph range
-		glyph.id = 32 + i;
-		if (glyph.id > 126) break;
+		glyph.id = character_range_start + i;
+		if (glyph.id > character_range_end) break;
 
 		let col = index_to_image_coord(i, num_cols).x;
 		let row = index_to_image_coord(i, num_cols).y;
@@ -66,7 +71,7 @@ function main(image: HTMLImageElement): void {
 		glyph.position.y = image_margin.y + (char_size.y + char_margin.y) * row;
 		glyph.size.x = char_size.x;
 		glyph.size.y = char_size.y;
-		glyph.x_advance = glyph.size.x + 1;
+		glyph.advance = glyph.size.x + 1;
 
 		glyphs.push(glyph);
 	}
@@ -92,17 +97,41 @@ function main(image: HTMLImageElement): void {
 			}
 		}
 
-		glyph.x_advance = glyph.size.x + 1;
+		glyph.advance = glyph.size.x + 1;
 	}
 
 	// output glyph information in AngelCode's BMFont format
-	let output_string = "";
+	let fnt = create_fnt_file();
+
+	fnt.info.face = file_name;
+	fnt.info.size = char_size.y;
+	fnt.info.spacing.horizontal = char_margin.x;
+	fnt.info.spacing.vertical = char_margin.y;
+	fnt.common.lineHeight = char_size.y + 1;
+	fnt.common.base = baseline;
+	fnt.common.scaleW = image_size.x;
+	fnt.common.scaleH = image_size.y;
+	fnt.pages.push({
+		id: 0,
+		file: file_name
+	});
 
 	for (let glyph of glyphs) {
-		output_string += glyph_to_string(glyph) + "\n";
+		fnt.chars.push({
+			id: glyph.id,
+			x: glyph.position.x,
+			y: glyph.position.y,
+			width: glyph.size.x,
+			height: glyph.size.y,
+			xoffset: glyph.offset.x,
+			yoffset: glyph.offset.y,
+			xadvance: glyph.advance,
+			page: 0,
+			chnl: 15
+		});
 	}
 
-	(document.getElementById("output") as HTMLTextAreaElement).value = output_string;
+	(document.getElementById("output") as HTMLTextAreaElement).value = fnt_to_string(fnt);
 
 	draw(glyphs);
 }
@@ -146,8 +175,4 @@ function draw(glyphs: Array<Glyph>): void {
 		ctx.closePath();
 		ctx.stroke();
 	}
-}
-
-function glyph_to_string(glyph: Glyph): string {
-	return `char id=${glyph.id} x=${glyph.position.x} y=${glyph.position.y} width=${glyph.size.x} height=${glyph.size.y} xoffset=${glyph.offset.x} yoffset=${glyph.offset.y} xadvance=${glyph.x_advance} page=0 chnl=15`;
 }

@@ -15,7 +15,7 @@ class Glyph {
 	position: Vector2 = new Vector2();
 	size: Vector2 = new Vector2();
 	offset: Vector2 = new Vector2();
-	x_advance: number = 0;
+	advance: number = 0;
 }
 
 function image_coord_to_index(coord: Vector2, image_width: number): number {

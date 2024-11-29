@@ -1,10 +1,11 @@
 let canvas = document.getElementById("viewport") as HTMLCanvasElement;
 let ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
-ctx.imageSmoothingEnabled = false;
 
 const image_margin = new Vector2(0, 0);
 const char_margin = new Vector2(0, 0);
 const char_size = new Vector2(10, 10);
+const image_size = new Vector2();
+let baseline = 0;
 
 const image = document.createElement("img");
 
@@ -15,6 +16,7 @@ document.body.oninput = (ev) => {
 	char_margin.y = (document.getElementById("glyph_margin_y") as HTMLInputElement).valueAsNumber;
 	char_size.x = (document.getElementById("glyph_size_x") as HTMLInputElement).valueAsNumber;
 	char_size.y = (document.getElementById("glyph_size_y") as HTMLInputElement).valueAsNumber;
+	baseline = (document.getElementById("baseline") as HTMLInputElement).valueAsNumber;
 
 	main(image);
 };
@@ -41,7 +43,8 @@ document.body.dispatchEvent(new InputEvent("input"));
 image_file_input.dispatchEvent(new Event("change"));
 
 function main(image: HTMLImageElement): void {
-	const image_size = new Vector2(image.width, image.height);
+	image_size.x = image.width;
+	image_size.y = image.height;
 
 	// generate glyph data
 	let glyphs = new Array<Glyph>();
@@ -92,23 +95,6 @@ function main(image: HTMLImageElement): void {
 		glyph.x_advance = glyph.size.x + 1;
 	}
 
-	// draw glyph information
-	ctx.resetTransform();
-
-	ctx.fillStyle = "black";
-	ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-	ctx.scale(5, 5);
-
-	for (let glyph of glyphs) {
-		ctx.fillStyle = "maroon";
-		ctx.fillRect(glyph.position.x, glyph.position.y, glyph.x_advance, glyph.size.y);
-		ctx.fillStyle = "navy";
-		ctx.fillRect(glyph.position.x, glyph.position.y, glyph.size.x, glyph.size.y);
-	}
-
-	ctx.drawImage(image, 0, 0);
-
 	// output glyph information in AngelCode's BMFont format
 	let output_string = "";
 
@@ -117,6 +103,49 @@ function main(image: HTMLImageElement): void {
 	}
 
 	(document.getElementById("output") as HTMLTextAreaElement).value = output_string;
+
+	draw(glyphs);
+}
+
+function draw(glyphs: Array<Glyph>): void {
+	const scale = Math.floor(Math.min(canvas.width / image_size.x, canvas.height / image_size.y));
+
+	ctx.reset();
+	ctx.imageSmoothingEnabled = false;
+	ctx.lineWidth = 1 / scale;
+
+	// draw checkerboard background
+	ctx.fillStyle = "#303030";
+	ctx.fillRect(0, 0, canvas.width, canvas.height);
+	ctx.fillStyle = "#404040";
+	draw_checkerboard_pattern(ctx, 10);
+
+	// scale context and center align
+	ctx.scale(scale, scale);
+	ctx.translate(Math.floor((canvas.width / scale - image_size.x) / 2), Math.floor((canvas.height / scale - image_size.y) / 2));
+
+	// draw image
+	ctx.drawImage(image, 0, 0);
+
+	// image boundary
+	ctx.strokeStyle = "blue";
+	ctx.strokeRect(0, 0, image_size.x, image_size.y);
+
+	// glyph boundary
+	ctx.strokeStyle = "yellow";
+	for (let glyph of glyphs) {
+		ctx.strokeRect(glyph.position.x, glyph.position.y, glyph.size.x, glyph.size.y);
+	}
+	
+	// glyph baseline
+	ctx.strokeStyle = "red";
+	for (let y = image_margin.y + baseline; y <= image_size.y; y += char_size.y + char_margin.y) {
+		ctx.beginPath();
+		ctx.moveTo(0, y);
+		ctx.lineTo(image_size.x, y);
+		ctx.closePath();
+		ctx.stroke();
+	}
 }
 
 function glyph_to_string(glyph: Glyph): string {

@@ -4,40 +4,46 @@
 		<title>Font Creator</title>
 	</head>
 	<body>
-		<canvas id="viewport" width="640" height="480" style="border: 1px solid black;"></canvas>
+		<canvas id="viewport" width="640" height="480"></canvas>
 		<br>
 		<table>
 			<tr>
 				<td><label for="image_file_input">Image</label></td>
 				<td>
-					<input type="file" id="image_file_input" accept="image/*" />
+					<input id="image_file_input" type="file" accept="image/*">
 				</td>
 			</tr>
 			<tr>
 				<td><label for="image_margin_x">Image Margin</label></td>
 				<td>
-					<input id="image_margin_x" type="number" value="0" />
-					<input id="image_margin_y" type="number" value="0" />
+					<input id="image_margin_x" type="number" value="0">
+					<input id="image_margin_y" type="number" value="0">
 				</td>
 			</tr>
 			<tr>
 				<td><label for="glyph_margin_x">Glyph Margin</label></td>
 				<td>
-					<input id="glyph_margin_x" type="number" value="0" />
-					<input id="glyph_margin_y" type="number" value="0" />
+					<input id="glyph_margin_x" type="number" value="0">
+					<input id="glyph_margin_y" type="number" value="0">
 				</td>
 			</tr>
 			<tr>
 				<td><label for="glyph_size_x">Glyph Size</label></td>
 				<td>
-					<input id="glyph_size_x" type="number" value="10" />
-					<input id="glyph_size_y" type="number" value="10" />
+					<input id="glyph_size_x" type="number" value="10">
+					<input id="glyph_size_y" type="number" value="10">
+				</td>
+			</tr>
+			<tr>
+				<td><label for="baseline">Baseline</label></td>
+				<td>
+					<input id="baseline" type="number" value="0">
 				</td>
 			</tr>
 			<tr>
 				<td><label for="character_ranges">Character Ranges</label></td>
 				<td>
-					<input id="character_ranges" type="text" />
+					<input id="character_ranges" type="text">
 				</td>
 			</tr>
 		</table>

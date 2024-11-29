@@ -37,7 +37,7 @@ function get_image_data(image: HTMLImageElement): ImageData {
 	return fb_ctx.getImageData(0, 0, canvas.width, canvas.height);
 }
 
-function is_rect_empty(image: ImageData, position: Vector2, size: Vector2) {
+function is_rect_empty(image: ImageData, position: Vector2, size: Vector2): boolean {
 	for (let y = position.y; y < position.y + size.y; y++) {
 		for (let x = position.x; x < position.x + size.x; x++) {
 			let alpha = image.data[image_coord_to_index(new Vector2(x, y), image.width) * 4 + 3];
@@ -49,4 +49,14 @@ function is_rect_empty(image: ImageData, position: Vector2, size: Vector2) {
 	}
 
 	return true;
+}
+
+function draw_checkerboard_pattern(context: CanvasRenderingContext2D, size: number): void {
+	for (let y = 0; y < context.canvas.height; y+= size) {
+		for (let x = 0; x < context.canvas.width; x += size) {
+			if ((x + y) % (size * 2)) {
+				context.fillRect(x, y, size, size);
+			}
+		}
+	}
 }

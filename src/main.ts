@@ -2,8 +2,25 @@ let canvas = document.getElementById("viewport") as HTMLCanvasElement;
 let ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
 ctx.imageSmoothingEnabled = false;
 
+const image_margin = new Vector2(0, 0);
+const char_margin = new Vector2(0, 0);
+const char_size = new Vector2(10, 10);
+
+const image = document.createElement("img");
+
+document.body.oninput = (ev) => {
+	image_margin.x = (document.getElementById("image_margin_x") as HTMLInputElement).valueAsNumber;
+	image_margin.y = (document.getElementById("image_margin_y") as HTMLInputElement).valueAsNumber;
+	char_margin.x = (document.getElementById("glyph_margin_x") as HTMLInputElement).valueAsNumber;
+	char_margin.y = (document.getElementById("glyph_margin_y") as HTMLInputElement).valueAsNumber;
+	char_size.x = (document.getElementById("glyph_size_x") as HTMLInputElement).valueAsNumber;
+	char_size.y = (document.getElementById("glyph_size_y") as HTMLInputElement).valueAsNumber;
+
+	main(image);
+};
+
 let image_file_input = document.getElementById("image_file_input") as HTMLInputElement;
-image_file_input.addEventListener("change", (ev: Event) => {
+image_file_input.onchange = (ev: Event) => {
 	if (!image_file_input.files || !image_file_input.files.length) {
 		return;
 	}
@@ -12,25 +29,25 @@ image_file_input.addEventListener("change", (ev: Event) => {
 	let reader = new FileReader();
 
 	reader.onload = (ev: ProgressEvent<FileReader>) => {
-		let image = document.createElement("img");
 		image.src = reader.result as string;
 		image.onload = () => main(image);
 	};
 
 	reader.readAsDataURL(file);
-});
+};
+
+// temporary fix to avoid needing to interact with input controls after page refresh
+document.body.dispatchEvent(new InputEvent("input"));
+image_file_input.dispatchEvent(new Event("change"));
 
 function main(image: HTMLImageElement): void {
 	const image_size = new Vector2(image.width, image.height);
-	const image_margin = new Vector2(1, 1);
-	const char_margin = new Vector2(1, 1);
-	const char_size = new Vector2(5, 10);
 
 	// generate glyph data
 	let glyphs = new Array<Glyph>();
 
-	let num_cols = (image_size.x - image_margin.x) / (char_size.x + char_margin.x);
-	let num_rows = (image_size.y - image_margin.y) / (char_size.y + char_margin.y);
+	let num_cols = Math.floor((image_size.x - image_margin.x + char_margin.x) / (char_size.x + char_margin.x));
+	let num_rows = Math.floor((image_size.y - image_margin.y + char_margin.y) / (char_size.y + char_margin.y));
 
 	for (let i = 0; i < num_cols * num_rows; i++) {
 		let glyph = new Glyph();

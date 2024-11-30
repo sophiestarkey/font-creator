@@ -64,8 +64,8 @@ function main(image: HTMLImageElement): void {
 		glyph.id = character_range_start + i;
 		if (glyph.id > character_range_end) break;
 
-		let col = index_to_image_coord(i, num_cols).x;
-		let row = index_to_image_coord(i, num_cols).y;
+		let col = i % num_cols;
+		let row = Math.floor(i / num_cols);
 
 		glyph.position.x = image_margin.x + (char_size.x + char_margin.x) * col;
 		glyph.position.y = image_margin.y + (char_size.y + char_margin.y) * row;
@@ -80,30 +80,45 @@ function main(image: HTMLImageElement): void {
 	let image_data = get_image_data(image);
 
 	for (let glyph of glyphs) {
-		// trim horizontal space before glyph
-		for (let x = glyph.position.x; x < glyph.position.x + glyph.size.x; x++) {
-			if (!is_rect_empty(image_data, new Vector2(x, glyph.position.y), new Vector2(1, glyph.size.y))) {
-				glyph.size.x -= x - glyph.position.x;
-				glyph.position.x = x;
-				break;
+		let min_x = -1;
+		let min_y = -1;
+		let max_x = -1;
+		let max_y = -1;
+
+		for (let y = glyph.position.y; y < glyph.position.y + glyph.size.y; y++) {
+			for (let x = glyph.position.x; x < glyph.position.x + glyph.size.x; x++) {
+				let alpha = image_data.data[(y * image_size.x + x) * 4 + 3];
+				if (alpha == 0) continue;
+
+				min_x = min_x == -1 ? x : Math.min(min_x, x);
+				min_y = min_y == -1 ? y : Math.min(min_y, y);
+				max_x = max_x == -1 ? x : Math.max(max_x, x);
+				max_y = max_y == -1 ? y : Math.max(max_y, y);
 			}
 		}
 
-		// trim horizontal space after glyph
-		for (let x = glyph.position.x + glyph.size.x - 1; x >= glyph.position.x; x--) {
-			if (!is_rect_empty(image_data, new Vector2(x, glyph.position.y), new Vector2(1, glyph.size.y))) {
-				glyph.size.x = x - glyph.position.x + 1;
-				break;
-			}
-		}
+		if (min_x == -1) min_x = glyph.position.x;
+		if (min_y == -1) min_y = glyph.position.y;
+		if (max_x == -1) max_x = glyph.position.x + glyph.size.x - 1;
+		if (max_y == -1) max_y = glyph.position.y + glyph.size.y - 1;
 
+		glyph.offset.y = min_y - glyph.position.y;
+		glyph.position.x = min_x;
+		glyph.position.y = min_y;
+		glyph.size.x = max_x - min_x + 1;
+		glyph.size.y = max_y - min_y + 1;
 		glyph.advance = glyph.size.x + 1;
 	}
 
 	// output glyph information in AngelCode's BMFont format
 	let fnt = create_fnt_file();
 
-	fnt.info.face = file_name;
+	if (file_name.lastIndexOf(".") != -1) {
+		fnt.info.face = file_name.substring(0, file_name.lastIndexOf("."));
+	} else {
+		fnt.info.face = file_name;
+	}
+
 	fnt.info.size = char_size.y;
 	fnt.info.spacing.horizontal = char_margin.x;
 	fnt.info.spacing.vertical = char_margin.y;

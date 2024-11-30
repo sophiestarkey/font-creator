@@ -165,8 +165,8 @@ function draw(glyphs: Array<Glyph>): void {
 	draw_checkerboard_pattern(ctx, 10);
 
 	// scale context and center align
+	ctx.translate(Math.floor((canvas.width - image_size.x * scale) / 2), Math.floor((canvas.height - image_size.y * scale) / 2));
 	ctx.scale(scale, scale);
-	ctx.translate(Math.floor((canvas.width / scale - image_size.x) / 2), Math.floor((canvas.height / scale - image_size.y) / 2));
 
 	// draw image
 	ctx.drawImage(image, 0, 0);

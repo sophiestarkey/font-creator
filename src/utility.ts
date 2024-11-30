@@ -34,7 +34,7 @@ function get_image_data(image: HTMLImageElement): ImageData {
 	fb_canvas.height = image.height;
 
 	fb_ctx.drawImage(image, 0, 0);
-	return fb_ctx.getImageData(0, 0, canvas.width, canvas.height);
+	return fb_ctx.getImageData(0, 0, fb_canvas.width, fb_canvas.height);
 }
 
 function is_rect_empty(image: ImageData, position: Vector2, size: Vector2): boolean {
